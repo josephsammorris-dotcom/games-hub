@@ -64,8 +64,17 @@ async function main() {
     const thumbFile = path.join(OUT, thumbRel);
     let thumb = null;
 
+    // A hand-picked thumbnail (public/custom-thumbs/<id>.jpg|png|webp) always wins over a screenshot.
+    let custom = null;
+    for (const ext of ['jpg', 'png', 'webp']) {
+      if (await haveThumb(path.join(OUT, 'custom-thumbs', `${id}.${ext}`))) { custom = `custom-thumbs/${id}.${ext}`; break; }
+    }
+
     const old = prev[id];
-    if (old && old.updated === r.pushed_at && old.url === url && await haveThumb(thumbFile)) {
+    if (custom) {
+      thumb = custom;
+      console.log(`  ★ ${r.name}: using custom thumbnail`);
+    } else if (old && old.updated === r.pushed_at && old.url === url && await haveThumb(thumbFile)) {
       thumb = thumbRel;
       console.log(`  ↺ ${r.name}: unchanged, reused thumbnail`);
     } else {
