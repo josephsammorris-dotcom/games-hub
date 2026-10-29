@@ -1,0 +1,12 @@
+{
+  "name": "games-hub",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "npx serve public"
+  },
+  "dependencies": {
+    "playwright": "1.49.1"
+  }
+}

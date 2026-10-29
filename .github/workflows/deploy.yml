@@ -1,0 +1,43 @@
+name: Refresh games list
+
+# Rebuilds public/games.json and thumbnails, then commits them to the repo.
+# Cloudflare watches this repo and publishes every commit automatically.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["public/games.json", "public/thumbs/**"]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [game-published]
+
+concurrency:
+  group: hub
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Build games.json and thumbnails
+        run: npm run build
+        env:
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit changes
+        run: |
+          git config user.name "games-hub bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/games.json public/thumbs
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update games list"
+          git push

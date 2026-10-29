@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Games</title>
+<meta name="description" content="A collection of browser games.">
+<style>
+  :root {
+    --bg: #14110f;
+    --surface: #1f1b18;
+    --surface-hi: #2a2521;
+    --text: #f4ede4;
+    --muted: #a69b8e;
+    --accent: #ffb23e;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f0e7;
+      --surface: #fffaf2;
+      --surface-hi: #fff;
+      --text: #231d17;
+      --muted: #7a6e60;
+      --accent: #c2570c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+    line-height: 1.4;
+  }
+  header, main { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 48px; padding-bottom: 8px; }
+  h1 { font-size: clamp(2rem, 6vw, 3.4rem); margin: 0; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); margin: 8px 0 24px; }
+  .tools { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  input, select {
+    background: var(--surface); color: var(--text);
+    border: 1px solid transparent; border-radius: 10px;
+    padding: 10px 14px; font: inherit;
+  }
+  input { flex: 1 1 220px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); }
+  .grid {
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    padding-bottom: 64px;
+  }
+  .card {
+    display: flex; flex-direction: column;
+    background: var(--surface); border-radius: var(--radius);
+    overflow: hidden; text-decoration: none; color: inherit;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .card:hover, .card:focus-visible { transform: translateY(-4px); background: var(--surface-hi); outline: none; }
+  .card:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+  .thumb {
+    aspect-ratio: 16 / 9; width: 100%; object-fit: cover; display: block;
+    background: linear-gradient(135deg, var(--surface-hi), var(--surface));
+  }
+  .placeholder {
+    aspect-ratio: 16 / 9; display: grid; place-items: center;
+    font-size: 2.4rem; color: var(--muted);
+    background: linear-gradient(135deg, var(--surface-hi), var(--surface));
+  }
+  .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .title { font-weight: 700; font-size: 1.1rem; margin: 0; }
+  .desc { color: var(--muted); font-size: .92rem; margin: 0; flex: 1; }
+  .meta { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: var(--muted); margin-top: 6px; }
+  .play { color: var(--accent); font-weight: 700; }
+  .badge { background: var(--accent); color: #1a1208; border-radius: 99px; padding: 1px 8px; font-size: .7rem; font-weight: 700; margin-left: 8px; }
+  .empty { color: var(--muted); padding: 48px 0; text-align: center; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding-bottom: 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>My <span>Games</span></h1>
+  <p class="sub" id="count">Loading…</p>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search games…" aria-label="Search games">
+    <select id="sort" aria-label="Sort games">
+      <option value="updated">Recently updated</option>
+      <option value="created">Newest</option>
+      <option value="title">A–Z</option>
+    </select>
+  </div>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>No games found.</p>
+</main>
+<footer id="built"></footer>
+
+<script>
+(async () => {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('count');
+  const q = document.getElementById('q');
+  const sort = document.getElementById('sort');
+  let games = [];
+
+  try {
+    const res = await fetch('games.json', { cache: 'no-cache' });
+    games = await res.json();
+  } catch (e) {
+    count.textContent = 'Could not load games.';
+    return;
+  }
+
+  const NEW_DAYS = 14;
+  const isNew = g => (Date.now() - new Date(g.created)) / 864e5 < NEW_DAYS;
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+
+  function render() {
+    const term = q.value.trim().toLowerCase();
+    const list = games
+      .filter(g => !term || (g.title + ' ' + g.description).toLowerCase().includes(term))
+      .sort((a, b) => sort.value === 'title'
+        ? a.title.localeCompare(b.title)
+        : b[sort.value].localeCompare(a[sort.value]));
+
+    grid.replaceChildren();
+    for (const g of list) {
+      const a = el('a', 'card');
+      a.href = g.url;
+      a.setAttribute('aria-label', 'Play ' + g.title);
+
+      if (g.thumb) {
+        const img = el('img', 'thumb');
+        img.src = g.thumb; img.alt = ''; img.loading = 'lazy';
+        img.width = 1280; img.height = 720;
+        a.append(img);
+      } else {
+        a.append(el('div', 'placeholder', '🎮'));
+      }
+
+      const body = el('div', 'body');
+      const title = el('h2', 'title', g.title);
+      if (isNew(g)) title.append(el('span', 'badge', 'NEW'));
+      body.append(title, el('p', 'desc', g.description));
+
+      const meta = el('div', 'meta');
+      meta.append(
+        el('span', '', 'Updated ' + new Date(g.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })),
+        el('span', 'play', 'Play →')
+      );
+      body.append(meta);
+      a.append(body);
+      grid.append(a);
+    }
+    empty.hidden = list.length > 0;
+    count.textContent = games.length + (games.length === 1 ? ' game' : ' games');
+  }
+
+  q.addEventListener('input', render);
+  sort.addEventListener('change', render);
+  render();
+})();
+</script>
+</body>
+</html>
