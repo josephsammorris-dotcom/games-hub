@@ -6,7 +6,7 @@
     "url": "https://cocktail-shack.josephsammorris.workers.dev",
     "repo": "https://github.com/josephsammorris-dotcom/cocktail-shack",
     "created": "2026-10-26T23:43:10Z",
-    "updated": "2026-10-27T23:47:53Z"
+    "updated": "2026-10-30T15:22:14Z"
   },
   {
     "id": "crash-junction",
@@ -15,7 +15,16 @@
     "url": "https://crash-junction.josephsammorris.workers.dev",
     "repo": "https://github.com/josephsammorris-dotcom/crash-junction",
     "created": "2026-10-28T20:44:07Z",
-    "updated": "2026-10-30T12:58:11Z"
+    "updated": "2026-10-30T13:14:36Z"
+  },
+  {
+    "id": "flagfire",
+    "title": "Flagfire",
+    "description": "",
+    "url": "https://flagfire.josephsammorris.workers.dev",
+    "repo": "https://github.com/josephsammorris-dotcom/flagfire",
+    "created": "2026-10-30T16:34:33Z",
+    "updated": "2026-10-30T16:56:00Z"
   },
   {
     "id": "hotel-game",
